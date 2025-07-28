@@ -1,0 +1,55 @@
+.dashboard {
+  padding: 24px;
+  font-family: 'Roboto', sans-serif; /* Changed font */
+  background-color: #f9fafb; /* Added a subtle light background */
+}
+
+.subtitle {
+  color: #555; /* Darker gray */
+  font-size: 1rem;
+  margin-bottom: 24px;
+  font-weight: 500; /* Slightly bolder */
+}
+
+.dashboard-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.dash-card {
+  flex: 1 1 280px;
+  background: linear-gradient(135deg, #8e44ad, #3498db); /* Purple to blue gradient */
+  color: #fff;
+  padding: 24px;
+  text-decoration: none;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(100, 50, 120, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dash-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 24px rgba(100, 50, 120, 0.3); /* softer, colorful shadow */
+}
+
+.dash-card h3 {
+  margin: 0 0 12px;
+  font-weight: 600;
+  font-size: 1.3rem;
+}
+
+.dash-card p {
+  margin: 0;
+  font-size: 1rem;
+  color: #ddd;
+  line-height: 1.4;
+}
+.dashboard {
+  padding: 24px;
+  font-family: 'Roboto', sans-serif;
+background-color: #f9fafb; /* light gray-blue */
+  /* Alternatively use a solid background color */
+  /* background-color: #f0f4f8; */
+  min-height: 100vh; /* Ensures full height */
+}

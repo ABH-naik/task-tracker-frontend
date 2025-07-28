@@ -1,0 +1,108 @@
+/* === BACKDROP === */
+.modal-backdrop {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background-color: rgba(50, 20, 10, 0.7); /* warmer, darker semi-transparent overlay */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+/* === MODAL BOX === */
+.modal-container {
+  background: linear-gradient(135deg, #ffecd2, #fcb69f); /* warm peachy gradient */
+  padding: 2rem;
+  border-radius: 12px;
+  width: 500px;
+  max-width: 90%;
+  box-shadow: 0 12px 32px rgba(255, 108, 52, 0.4); /* soft orange glow */
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* === FORM === */
+.modal-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-form label {
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 4px;
+  color: #4a2e0d; /* dark warm brown */
+}
+
+.modal-form input,
+.modal-form textarea,
+.modal-form select {
+  background-color: #ffffff;
+  color: #4a2e0d;
+  width: 100%;
+  padding: 10px;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  border: 1px solid #d97d3d;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+
+.modal-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Focus outline for accessibility */
+.modal-form input:focus,
+.modal-form textarea:focus,
+.modal-form select:focus,
+.save-button:focus,
+.close-button:focus {
+  outline: 2px solid #d97d3d;
+  outline-offset: 2px;
+}
+
+/* === BUTTONS === */
+.save-button {
+  background-color: #d35400; /* burnt orange */
+  color: white;
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.save-button:hover {
+  background-color: #e67e22; /* lighter orange on hover */
+}
+
+.close-button {
+  background-color: #6e2c00; /* darker burnt orange */
+  color: white;
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.close-button:hover {
+  background-color: #a04000;
+}
+
+/* Responsive modal width */
+@media (max-width: 600px) {
+  .modal-container {
+    width: 90%;
+    padding: 1.5rem;
+  }
+}
