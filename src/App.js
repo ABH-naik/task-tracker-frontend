@@ -6,6 +6,10 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import AuthInitializer from './features/auth/AuthInitializer';
+import MyTasks from './features/tasks/MyTasks';    // <-- viewer’s task list
+
+// import TaskManager from './features/tasks/TaskManager';  
+// ^— no longer used for /tasks
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -14,7 +18,7 @@ import LoginPage from './features/auth/LoginPage';
 import Dashboard from './pages/Dashboard';
 import RoleManager from './features/roles/RoleManager';
 import ProjectTaskManager from './features/tasks/ProjectTaskManager';
-import TaskManager from './features/tasks/TaskManager';
+// import TaskManager from './features/tasks/TaskManager'; // removed
 import ProjectManager from './features/projects/ProjectManager';
 import UserManager from './features/users/UserManager';
 
@@ -31,14 +35,12 @@ const App = () => {
     <Router>
       <AuthInitializer />
 
-      
       <Navbar />
 
       <ToastContainer position="top-center" autoClose={3000} />
 
       <div className="main-content" style={{ padding: '20px' }}>
         <Routes>
-
           <Route path="/login" element={<LoginPage />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
@@ -51,7 +53,7 @@ const App = () => {
             }
           />
 
-          {/* Tasks for a specific project */}
+          {/* Project-specific task view for ADMIN & TASK_CREATOR */}
           <Route
             path="/projects/:projectId/tasks"
             element={
@@ -61,17 +63,17 @@ const App = () => {
             }
           />
 
-          {/* Stand-alone tasks view */}
+          {/* Stand-alone tasks view for READ_ONLY_USER */}
           <Route
             path="/tasks"
             element={
               <ProtectedRoute roles={['READ_ONLY_USER']}>
-                <TaskManager />
+                <MyTasks />
               </ProtectedRoute>
             }
           />
 
-          {/* Project list/management */}
+          {/* Project list/management (ADMIN & TASK_CREATOR) */}
           <Route
             path="/projects"
             element={
@@ -81,7 +83,7 @@ const App = () => {
             }
           />
 
-          {/* User management */}
+          {/* User management (ADMIN & TASK_CREATOR) */}
           <Route
             path="/users"
             element={
@@ -91,7 +93,7 @@ const App = () => {
             }
           />
 
-          {/* Role management */}
+          {/* Role management (ADMIN only) */}
           <Route
             path="/roles"
             element={
@@ -101,6 +103,7 @@ const App = () => {
             }
           />
 
+          {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>

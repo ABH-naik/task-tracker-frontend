@@ -71,7 +71,7 @@ const RoleManager = () => {
                   </select>
                 </td>
                 <td>
-                  <button onClick={() => handleSubmit(user.id)}>
+                  <button className='Add-button' onClick={() => handleSubmit(user.id)}>
                     Update
                   </button>
                 </td>

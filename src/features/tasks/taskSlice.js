@@ -8,7 +8,7 @@ import axios from '../../app/axiosConfig';
 export const fetchUserAllTasks = createAsyncThunk(
   'tasks/fetchUserAll',
   async (userId) => {
-    const resp = await api.get(`/tasks/owner/${userId}`);
+    const resp = await api.get(`/tasks/user/${userId}`);
     return resp.data;
   }
 );
@@ -61,14 +61,17 @@ export const createTask = createAsyncThunk(
 );
 
 // Update only status — now returns updated task object from API
+// src/features/tasks/taskSlice.js
+
 export const updateTaskStatus = createAsyncThunk(
   'tasks/updateStatus',
   async ({ taskId, userId, projectId, status }, { rejectWithValue }) => {
     try {
-      const response = await api.put('/tasks/update-status', {
-        taskId, userId, projectId, status
-      });
-      // API should return the updated task object here
+      const response = await api.put(
+        `/tasks/${taskId}/status`,
+        null,                         // no request body
+        { params: { userId, projectId, status } }
+      );
       return response.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);

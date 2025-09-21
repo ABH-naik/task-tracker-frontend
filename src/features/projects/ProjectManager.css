@@ -1,9 +1,11 @@
+/* src/features/projects/ProjectManager.css */
+
 /* === BACKDROP === */
 .modal-backdrop {
   position: fixed;
   top: 0; left: 0;
   width: 100vw; height: 100vh;
-  background-color: rgba(50, 20, 10, 0.7); /* warmer, darker semi-transparent overlay */
+  background-color: rgba(50, 20, 10, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -12,12 +14,12 @@
 
 /* === MODAL BOX === */
 .modal-container {
-  background: linear-gradient(135deg, #ffecd2, #fcb69f); /* warm peachy gradient */
+  background: linear-gradient(135deg, #ffecd2, #fcb69f);
   padding: 2rem;
   border-radius: 12px;
   width: 500px;
   max-width: 90%;
-  box-shadow: 0 12px 32px rgba(255, 108, 52, 0.4); /* soft orange glow */
+  box-shadow: 0 12px 32px rgba(255, 108, 52, 0.4);
   animation: fadeIn 0.3s ease-in-out;
 }
 
@@ -36,7 +38,7 @@
   font-weight: 600;
   margin-top: 1rem;
   margin-bottom: 4px;
-  color: #4a2e0d; /* dark warm brown */
+  color: #4a2e0d;
 }
 
 .modal-form input,
@@ -58,19 +60,9 @@
   min-height: 80px;
 }
 
-/* Focus outline for accessibility */
-.modal-form input:focus,
-.modal-form textarea:focus,
-.modal-form select:focus,
-.save-button:focus,
-.close-button:focus {
-  outline: 2px solid #d97d3d;
-  outline-offset: 2px;
-}
-
 /* === BUTTONS === */
 .save-button {
-  background-color: #d35400; /* burnt orange */
+  background-color: #d35400;
   color: white;
   padding: 10px 16px;
   border-radius: 6px;
@@ -81,11 +73,11 @@
 }
 
 .save-button:hover {
-  background-color: #e67e22; /* lighter orange on hover */
+  background-color: #e67e22;
 }
 
 .close-button {
-  background-color: #6e2c00; /* darker burnt orange */
+  background-color: #6e2c00;
   color: white;
   padding: 10px 16px;
   border-radius: 6px;

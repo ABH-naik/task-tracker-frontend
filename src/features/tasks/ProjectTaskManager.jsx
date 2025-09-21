@@ -1,3 +1,5 @@
+// src/features/tasks/ProjectTaskManager.jsx
+
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
@@ -60,11 +62,15 @@ const ProjectTaskManager = () => {
       dispatch(fetchUsers());
     }
     setAddMode(true);
+    setEditMode(false);
+    setDeleteMode(false);
     setShowModal(true);
   };
 
-  const handleEditClick = (task) => {
+  const handleEditClick = task => {
     setEditMode(true);
+    setAddMode(false);
+    setDeleteMode(false);
     setShowModal(true);
     setEditTask({
       id: task.id,
@@ -73,6 +79,14 @@ const ProjectTaskManager = () => {
       assigneeId: task.assigneeId || '',
       status: task.status || ''
     });
+  };
+
+  const handleDeleteClick = id => {
+    setDeleteId(id);
+    setDeleteMode(true);
+    setAddMode(false);
+    setEditMode(false);
+    setShowModal(true);
   };
 
   const handleChange = e => {
@@ -89,14 +103,15 @@ const ProjectTaskManager = () => {
       toast.error("User not found — cannot assign owner");
       return;
     }
-
-    dispatch(createTask({
-      description: newTask.description,
-      dueDate: newTask.dueDate,
-      projectId: Number(projectId),
-      ownerId: Number(user.id),
-      assigneeId: newTask.assigneeId || null
-    }))
+    dispatch(
+      createTask({
+        description: newTask.description,
+        dueDate: newTask.dueDate,
+        projectId: Number(projectId),
+        ownerId: Number(user.id),
+        assigneeId: newTask.assigneeId || null
+      })
+    )
       .unwrap()
       .then(() => {
         toast.success('Task created successfully');
@@ -110,29 +125,23 @@ const ProjectTaskManager = () => {
 
   const handleEditSubmit = e => {
     e.preventDefault();
-    dispatch(updateTask({
-      id: editTask.id,
-      description: editTask.description,
-      dueDate: editTask.dueDate,
-      assigneeId: editTask.assigneeId || null,
-      status: editTask.status
-    }))
+    dispatch(
+      updateTask({
+        id: editTask.id,
+        description: editTask.description,
+        dueDate: editTask.dueDate,
+        assigneeId: editTask.assigneeId || null,
+        status: editTask.status
+      })
+    )
       .unwrap()
       .then(() => {
         toast.success('Task updated successfully');
         dispatch(fetchProjectAllTasks(projectId));
-        setEditMode(false);
         setShowModal(false);
+        setEditMode(false);
       })
       .catch(err => toast.error(err.message || 'Failed to update task'));
-  };
-
-  // Removed handleStatusUpdate function as it is no longer needed
-
-  const handleDelete = id => {
-    setDeleteId(id);
-    setDeleteMode(true);
-    setShowModal(true);
   };
 
   const handleSubmitDelete = () => {
@@ -177,15 +186,20 @@ const ProjectTaskManager = () => {
                 <td>{task.id}</td>
                 <td>{task.description || 'No Description'}</td>
                 <td>{task.dueDate || 'No Due Date'}</td>
-                <td>{task.status ? task.status.replace('_', ' ') : '-'}</td>
+                <td>{task.status?.replace('_', ' ') || '-'}</td>
                 <td>{task.ownerName ?? '-'}</td>
                 <td>{task.assigneeName ?? '-'}</td>
                 <td>
-                  {/* No status update buttons here to avoid unwanted API calls */}
-                  <Link onClick={() => handleEditClick(task)} style={{ cursor: 'pointer', marginLeft: '10px' }}>
+                  <Link
+                    onClick={() => handleEditClick(task)}
+                    style={{ cursor: 'pointer', marginLeft: '10px' }}
+                  >
                     <FontAwesomeIcon icon={faScrewdriverWrench} />
                   </Link>
-                  <Link onClick={() => handleDelete(task.id)} style={{ cursor: 'pointer', marginLeft: '10px' }}>
+                  <Link
+                    onClick={() => handleDeleteClick(task.id)}
+                    style={{ cursor: 'pointer', marginLeft: '10px' }}
+                  >
                     <FontAwesomeIcon icon={faTrash} />
                   </Link>
                 </td>
@@ -197,7 +211,7 @@ const ProjectTaskManager = () => {
 
       {showModal && (
         <div className="modal-backdrop">
-          <div className="modal">
+          <div className="modal-container">
             {addMode && (
               <>
                 <h3>Add Task</h3>
@@ -224,14 +238,27 @@ const ProjectTaskManager = () => {
                     required
                   >
                     <option value="">Select...</option>
-                    {readOnlyUsers.map(user => (
-                      <option key={user.id} value={user.id}>
-                        {user.name}
+                    {readOnlyUsers.map(u => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
                       </option>
                     ))}
                   </select>
-                  <button type="submit" className="save-button">Save</button>
-                  <button type="button" className="close-button" onClick={() => { setAddMode(false); setShowModal(false); }}>Cancel</button>
+                  <div className="form-actions">
+                    <button type="submit" className="save-button">
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="close-button"
+                      onClick={() => {
+                        setAddMode(false);
+                        setShowModal(false);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </form>
               </>
             )}
@@ -262,8 +289,10 @@ const ProjectTaskManager = () => {
                     required
                   >
                     <option value="">Select...</option>
-                    {readOnlyUsers.map(user => (
-                      <option key={user.id} value={user.id}>{user.name}</option>
+                    {readOnlyUsers.map(u => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
+                      </option>
                     ))}
                   </select>
                   <label>Status</label>
@@ -278,17 +307,46 @@ const ProjectTaskManager = () => {
                     <option value="IN_PROGRESS">In Progress</option>
                     <option value="COMPLETED">Completed</option>
                   </select>
-                  <button type="submit" className="save-button">Update</button>
-                  <button type="button" className="close-button" onClick={() => { setEditMode(false); setShowModal(false); }}>Cancel</button>
+                  <div className="form-actions">
+                    <button type="submit" className="save-button">
+                      Update
+                    </button>
+                    <button
+                      type="button"
+                      className="close-button"
+                      onClick={() => {
+                        setEditMode(false);
+                        setShowModal(false);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </form>
               </>
             )}
 
             {deleteMode && (
               <>
+                <h3>Delete Task</h3>
                 <p>Are you sure you want to delete this task?</p>
-                <button type="button" className="close-button" onClick={handleSubmitDelete}>Yes</button>
-                <button type="button" className="save-button" style={{ marginLeft: '5px' }} onClick={() => { setDeleteMode(false); setShowModal(false); }}>No</button>
+                <div className="form-actions">
+                  <button
+                    className="save-button"
+                    onClick={handleSubmitDelete}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    className="close-button"
+                    onClick={() => {
+                      setDeleteMode(false);
+                      setShowModal(false);
+                    }}
+                  >
+                    No
+                  </button>
+                </div>
               </>
             )}
           </div>

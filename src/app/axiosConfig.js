@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080'
+  baseURL: process.env.REACT_APP_API_URL || 'http://task-tracker-app.ap-south-1.elasticbeanstalk.com/api'
 });
 
 let getToken = () => null;

@@ -14,9 +14,15 @@ export const fetchUserRoles = createAsyncThunk('roles/fetchUserRoles', async (us
 
 export const assignRolesToUser = createAsyncThunk(
   'roles/assignRolesToUser',
-  async ({ userId, roles }) => {
-    const res = await axios.put(`/roles/user/${userId}`, { roles });
+  async ({ userId, role }) => {
+    const token = localStorage.getItem('token');
+    const res = await axios.put(`/roles/user/${userId}`, { role }, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
     return res.data;
+
   }
 );
 

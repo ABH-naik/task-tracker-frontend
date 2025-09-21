@@ -1,7 +1,7 @@
 // src/features/projects/projectSlice.js
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../../services/api"; // Assume baseURL = 'http://localhost:8080/api'
+import api from "../../services/api"; 
 
 // Convert backend ProjectResponse → frontend shape
 const transformProject = (project) => ({

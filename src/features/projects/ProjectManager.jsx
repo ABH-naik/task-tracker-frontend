@@ -1,10 +1,12 @@
+// src/features/projects/ProjectManager.jsx
+
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from 'react-redux';
 import { Link } from "react-router-dom";
 import { toast } from 'react-toastify';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faEdit, faPlus } from '@fortawesome/free-solid-svg-icons';
-import './ProjectManager.css'; // Or whatever your stylesheet is called
+import './ProjectManager.css';
 
 import {
   fetchAllProjects,
@@ -92,15 +94,6 @@ const ProjectManager = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this project?')) {
-      dispatch(deleteProject(id))
-        .unwrap()
-        .then(() => toast.success('Project deleted'))
-        .catch(err => toast.error(err.message));
-    }
-  };
-
   if (loading) return <div>Loading projects...</div>;
 
   return (
@@ -108,14 +101,14 @@ const ProjectManager = () => {
       <div className="header">
         <h2>Project Manager</h2>
         {hasPermission('ADMIN') && (
-  <button
-    className="Add-button"
-    type="button"
-    onClick={() => setIsModalOpen(true)}
-  >
-    <FontAwesomeIcon icon={faPlus} /> Add Project
-  </button>
-)}
+          <button
+            className="Add-button"
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+          >
+            <FontAwesomeIcon icon={faPlus} /> Add Project
+          </button>
+        )}
       </div>
 
       <table className="project-table">
@@ -153,118 +146,117 @@ const ProjectManager = () => {
           ))}
         </tbody>
       </table>
-{isModalOpen && (
-  <div className="modal-backdrop">
-    <div className="modal">
-      <div className="modal-content">
-        <h3>{isEditing ? 'Edit Project' : 'Add Project'}</h3>
-        <form className="modal-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Project Name</label>
-            <input
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-            />
-          </div>
 
-          <div className="form-group">
-            <label>Description</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              required
-            />
+      {/* Add / Edit Modal */}
+      {isModalOpen && (
+        <div className="modal-backdrop">
+          <div className="modal-container">
+            <h3>{isEditing ? 'Edit Project' : 'Add Project'}</h3>
+            <form className="modal-form" onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>Project Name</label>
+                <input
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Start Date</label>
+                  <input
+                    type="date"
+                    name="start_date"
+                    value={formData.start_date}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>End Date</label>
+                  <input
+                    type="date"
+                    name="end_date"
+                    value={formData.end_date}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Owner</label>
+                <select
+                  name="owner"
+                  value={formData.owner}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Owner</option>
+                  {users
+                    .filter(u => u.role === 'TASK_CREATOR')
+                    .map(u => (
+                      <option key={u.id} value={String(u.id)}>
+                        {u.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div className="form-actions">
+                <button type="submit" className="save-button">
+                  {isEditing ? 'Update' : 'Create'}
+                </button>
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="close-button"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
+        </div>
+      )}
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Start Date</label>
-              <input
-                type="date"
-                name="start_date"
-                value={formData.start_date}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>End Date</label>
-              <input
-                type="date"
-                name="end_date"
-                value={formData.end_date}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label>Owner</label>
-            <select
-              name="owner"
-              value={formData.owner}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Select Owner</option>
-              {users
-                .filter(u => u.role === 'TASK_CREATOR')
-                .map(u => (
-                  <option key={u.id} value={String(u.id)}>
-                    {u.name}
-                  </option>
-                ))}
-            </select>
-          </div>
-
-          <div className="form-actions">
-            <button type="submit" className="save-button">
-              {isEditing ? 'Update' : 'Create'}
-            </button>
-            <button
-              type="button"
-              onClick={resetForm}
-              className="close-button"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-)}
+      {/* Delete Confirmation */}
       {projectToDelete && (
-  <div className="modal delete-modal">
-    <div className="modal-content">
-      <h3>Delete Project</h3>
-      <p>Are you sure you want to delete <strong>{projectToDelete.name}</strong>?</p>
-      <div className="form-actions">
-        <button
-          onClick={() => {
-            dispatch(deleteProject(projectToDelete.id))
-              .unwrap()
-              .then(() => toast.success('Project deleted'))
-              .catch(err => toast.error(err.message))
-              .finally(() => setProjectToDelete(null));
-          }}
-          className="save-button"
-        >
-          Confirm Delete
-        </button>
-        <button
-          onClick={() => setProjectToDelete(null)}
-          className="close-button"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        <div className="modal-backdrop">
+          <div className="modal-container">
+            <h3>Delete Project</h3>
+            <p>
+              Are you sure you want to delete <strong>{projectToDelete.name}</strong>?
+            </p>
+            <div className="form-actions">
+              <button
+                className="save-button"
+                onClick={() => {
+                  dispatch(deleteProject(projectToDelete.id))
+                    .unwrap()
+                    .then(() => toast.success('Project deleted'))
+                    .finally(() => setProjectToDelete(null));
+                }}
+              >
+                Confirm Delete
+              </button>
+              <button
+                className="close-button"
+                onClick={() => setProjectToDelete(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

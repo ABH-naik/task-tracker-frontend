@@ -1,3 +1,5 @@
+// src/features/tasks/ProjectTaskManager.jsx
+
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
@@ -7,12 +9,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTrash,
   faScrewdriverWrench,
-  faSquareCheck,
   faSquarePlus
 } from '@fortawesome/free-solid-svg-icons';
 
 import {
   fetchProjectAllTasks,
+  fetchUserAllTasks,
   createTask,
   updateTask,
   updateTaskStatus,
@@ -25,17 +27,8 @@ const ProjectTaskManager = () => {
   const { projectId } = useParams();
 
   const { tasks, loading, error } = useSelector(state => state.tasks);
-  const { user } = useSelector(state => state.auth);
+  const { user, roles } = useSelector(state => state.auth);
   const users = useSelector(state => state.users.list);
-
-  useEffect(() => {
-    dispatch(fetchProjectAllTasks(projectId));
-    dispatch(fetchUsers());
-  }, [dispatch, projectId]);
-
-  useEffect(() => {
-    if (error) toast.error(error);
-  }, [error]);
 
   const [showModal, setShowModal] = useState(false);
   const [deleteMode, setDeleteMode] = useState(false);
@@ -43,7 +36,7 @@ const ProjectTaskManager = () => {
   const [addMode, setAddMode] = useState(false);
   const [editMode, setEditMode] = useState(false);
 
-  // State aligned with backend field names (camelCase)
+  // State for add/edit forms
   const [newTask, setNewTask] = useState({
     description: '',
     dueDate: '',
@@ -58,15 +51,31 @@ const ProjectTaskManager = () => {
     status: ''
   });
 
-  const handleAddClick = () => {
-    if (users.length === 0) {
-      dispatch(fetchUsers());
+  // 1) FETCH TASKS BASED ON ROLE
+  useEffect(() => {
+    // READ_ONLY_USER sees only their own tasks
+    if (roles.includes('READ_ONLY_USER') && user?.id) {
+      dispatch(fetchUserAllTasks(user.id));
     }
+    // ADMIN or TASK_CREATOR sees tasks for a project
+    else if (projectId) {
+      dispatch(fetchProjectAllTasks(projectId));
+    }
+    // always load users for assignee dropdown
+    dispatch(fetchUsers());
+  }, [dispatch, projectId, roles, user]);
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error]);
+
+  const handleAddClick = () => {
+    if (users.length === 0) dispatch(fetchUsers());
     setAddMode(true);
     setShowModal(true);
   };
 
-  const handleEditClick = (task) => {
+  const handleEditClick = task => {
     setEditMode(true);
     setShowModal(true);
     setEditTask({
@@ -88,12 +97,10 @@ const ProjectTaskManager = () => {
 
   const handleSubmit = e => {
     e.preventDefault();
-
     if (!user?.id) {
       toast.error("User not found — cannot assign owner");
       return;
     }
-
     dispatch(createTask({
       description: newTask.description,
       dueDate: newTask.dueDate,
@@ -114,7 +121,6 @@ const ProjectTaskManager = () => {
 
   const handleEditSubmit = e => {
     e.preventDefault();
-
     dispatch(updateTask({
       id: editTask.id,
       description: editTask.description,
@@ -134,6 +140,7 @@ const ProjectTaskManager = () => {
 
   const handleStatusUpdate = async (taskId, newStatus) => {
     try {
+      // include projectId for backend
       await dispatch(updateTaskStatus({
         taskId,
         userId: user.id,
@@ -157,7 +164,12 @@ const ProjectTaskManager = () => {
       .unwrap()
       .then(() => {
         toast.success('Task deleted successfully');
-        dispatch(fetchProjectAllTasks(projectId));
+        // refetch only if this is project view
+        if (!roles.includes('READ_ONLY_USER')) {
+          dispatch(fetchProjectAllTasks(projectId));
+        } else {
+          dispatch(fetchUserAllTasks(user.id));
+        }
       })
       .catch(() => toast.error('Failed to delete task'));
     setDeleteId('');
@@ -167,63 +179,80 @@ const ProjectTaskManager = () => {
 
   const readOnlyUsers = users.filter(u => u.role === 'READ_ONLY_USER');
 
+  if (loading) return <p>Loading...</p>;
+
   return (
     <>
-      <button className="Add-button" onClick={handleAddClick}>
-        <FontAwesomeIcon icon={faSquarePlus} /> Add Task
-      </button>
-      <h2>Task Manager</h2>
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Id</th>
-              <th>Description</th>
-              <th>Due Date</th>
-              <th>Status</th>
-              <th>Owner</th>
-              <th>Assignee</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tasks.map(task => (
-              <tr key={task.id}>
-                <td>{task.id}</td>
-                <td>{task.description || 'No Description'}</td>
-                <td>{task.dueDate || 'No Due Date'}</td>
-                <td>{task.status ? task.status.replace('_', ' ') : '-'}</td>
-                <td>{task.ownerName ?? '-'}</td>
-                <td>{task.assigneeName ?? '-'}</td>
-                <td>
-                  {task.status === 'NOT_STARTED' && (
-                    <button className="status-button" onClick={() => handleStatusUpdate(task.id, 'IN_PROGRESS')}>
-                      <FontAwesomeIcon icon={faSquareCheck} /> In-Progress
-                    </button>
-                  )}
-                  {task.status === 'IN_PROGRESS' && (
-                    <button className="status-button" onClick={() => handleStatusUpdate(task.id, 'COMPLETED')}>
-                      <FontAwesomeIcon icon={faSquareCheck} /> Completed
-                    </button>
-                  )}
-                  <Link onClick={() => handleEditClick(task)} style={{ cursor: 'pointer' }}>
-                    <FontAwesomeIcon icon={faScrewdriverWrench} />
-                  </Link>
-                  <Link onClick={() => handleDelete(task.id)} style={{ marginLeft: '10px', cursor: 'pointer' }}>
-                    <FontAwesomeIcon icon={faTrash} />
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Add Task button only for non-viewers */}
+      {!roles.includes('READ_ONLY_USER') && (
+        <button className="Add-button" onClick={handleAddClick}>
+          <FontAwesomeIcon icon={faSquarePlus} /> Add Task
+        </button>
       )}
 
+      <h2>Task Manager</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Description</th>
+            <th>Due Date</th>
+            <th>Status</th>
+            <th>Owner</th>
+            <th>Assignee</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tasks.map(task => (
+            <tr key={task.id}>
+              <td>{task.id}</td>
+              <td>{task.description || 'No Description'}</td>
+              <td>{task.dueDate || 'No Due Date'}</td>
+              <td>{task.status?.replace('_', ' ') || '-'}</td>
+              <td>{task.ownerName ?? '-'}</td>
+              <td>{task.assigneeName ?? '-'}</td>
+              <td>
+                {/* Status buttons */}
+                {!roles.includes('READ_ONLY_USER') && task.status === 'NOT_STARTED' && (
+                  <button
+                    className="status-button"
+                    onClick={() => handleStatusUpdate(task.id, 'IN_PROGRESS')}
+                  >
+                    In-Progress
+                  </button>
+                )}
+                {!roles.includes('READ_ONLY_USER') && task.status === 'IN_PROGRESS' && (
+                  <button
+                    className="status-button"
+                    onClick={() => handleStatusUpdate(task.id, 'COMPLETED')}
+                  >
+                    Completed
+                  </button>
+                )}
+
+                {/* Edit/Delete for non-viewers */}
+                {!roles.includes('READ_ONLY_USER') && (
+                  <>
+                    <Link onClick={() => handleEditClick(task)} style={{ marginLeft: '10px' }}>
+                      <FontAwesomeIcon icon={faScrewdriverWrench} />
+                    </Link>
+                    <Link onClick={() => handleDelete(task.id)} style={{ marginLeft: '10px' }}>
+                      <FontAwesomeIcon icon={faTrash} />
+                    </Link>
+                  </>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* MODAL */}
       {showModal && (
         <div className="modal-backdrop">
-          <div className="modal">
+          <div className="modal-container">
             {addMode && (
               <>
                 <h3>Add Task</h3>
@@ -250,14 +279,20 @@ const ProjectTaskManager = () => {
                     required
                   >
                     <option value="">Select...</option>
-                    {readOnlyUsers.map(user => (
-                      <option key={user.id} value={user.id}>
-                        {user.name}
-                      </option>
+                    {readOnlyUsers.map(u => (
+                      <option key={u.id} value={u.id}>{u.name}</option>
                     ))}
                   </select>
-                  <button type="submit" className="save-button">Save</button>
-                  <button type="button" className="close-button" onClick={() => { setAddMode(false); setShowModal(false); }}>Cancel</button>
+                  <div className="form-actions">
+                    <button type="submit" className="save-button">Save</button>
+                    <button
+                      type="button"
+                      className="close-button"
+                      onClick={() => { setAddMode(false); setShowModal(false); }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </form>
               </>
             )}
@@ -288,8 +323,8 @@ const ProjectTaskManager = () => {
                     required
                   >
                     <option value="">Select...</option>
-                    {readOnlyUsers.map(user => (
-                      <option key={user.id} value={user.id}>{user.name}</option>
+                    {readOnlyUsers.map(u => (
+                      <option key={u.id} value={u.id}>{u.name}</option>
                     ))}
                   </select>
                   <label>Status</label>
@@ -304,17 +339,35 @@ const ProjectTaskManager = () => {
                     <option value="IN_PROGRESS">In Progress</option>
                     <option value="COMPLETED">Completed</option>
                   </select>
-                  <button type="submit" className="save-button">Update</button>
-                  <button type="button" className="close-button" onClick={() => { setEditMode(false); setShowModal(false); }}>Cancel</button>
+                  <div className="form-actions">
+                    <button type="submit" className="save-button">Update</button>
+                    <button
+                      type="button"
+                      className="close-button"
+                      onClick={() => { setEditMode(false); setShowModal(false); }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </form>
               </>
             )}
 
             {deleteMode && (
               <>
+                <h3>Delete Task</h3>
                 <p>Are you sure you want to delete this task?</p>
-                <button type="button" className="close-button" onClick={handleSubmitDelete}>Yes</button>
-                <button type="button" className="save-button" style={{ marginLeft: '5px' }} onClick={() => { setDeleteMode(false); setShowModal(false); }}>No</button>
+                <div className="form-actions">
+                  <button className="save-button" onClick={handleSubmitDelete}>
+                    Yes, Delete
+                  </button>
+                  <button
+                    className="close-button"
+                    onClick={() => { setDeleteMode(false); setShowModal(false); }}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </>
             )}
           </div>
